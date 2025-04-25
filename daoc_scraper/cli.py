@@ -1,91 +1,101 @@
 #!/usr/bin/env python3
 """
-CLI entrypoint for daoc_scraper: scrape DAoC fight data and save to CSV.
+CLI entrypoint for daoc_scraper: scrape DAoC fight data and save into SQLite.
 """
 
-from pathlib import Path
+import asyncio
 
 import click
 import pandas as pd
+from sqlalchemy.dialects.sqlite import insert as sqlite_insert
 
+from daoc_scraper.database import async_session, engine
+from daoc_scraper.models import fights, metadata, participants
 from daoc_scraper.scraper import cleanup, fetch_fight_data, init_driver, login
 
 
+# ------------------------------------------------------------------------------
+async def init_db() -> None:
+    """Create tables if they don't exist."""
+    async with engine.begin() as conn:
+        await conn.run_sync(metadata.create_all)
+
+
+async def save_to_db(df: pd.DataFrame) -> None:
+    """
+    Given the flat DataFrame with columns [ID, Class, Win, Date],
+    group by ID to insert into fights + participants.
+    """
+    async with async_session() as session:
+        for fight_id, group in df.groupby("ID"):
+            # fight date is same for all rows in this group
+            fight_date = pd.to_datetime(group["Date"].iloc[0])
+
+            # prepare upsert for fights
+            stmt = (
+                sqlite_insert(fights)
+                .values(
+                    id=fight_id,
+                    fight_json=group.to_dict(orient="records"),
+                    date=fight_date,
+                )
+                .on_conflict_do_nothing(index_elements=["id"])
+            )
+            await session.execute(stmt)
+
+            # insert participants
+            for _, row in group.iterrows():
+                await session.execute(
+                    participants.insert()
+                    .prefix_with("OR IGNORE")
+                    .values(
+                        fight_id=fight_id,
+                        class_name=row["Class"],
+                        win=bool(row["Win"]),
+                    )
+                )
+
+        await session.commit()
+
+
+# ------------------------------------------------------------------------------
 @click.command()
-@click.option(
-    "--min-size",
-    "-n",
-    "min_size",
-    default=1,
-    show_default=True,
-    type=int,
-    help="Minimum fight size to scrape (e.g. 1 for 1v1).",
-)
-@click.option(
-    "--max-size",
-    "-x",
-    "max_size",
-    default=1,
-    show_default=True,
-    type=int,
-    help="Maximum fight size to scrape (e.g. 1 for 1v1).",
-)
-@click.option(
-    "--output",
-    "-o",
-    type=click.Path(),
-    default=None,
-    help="Where to write the CSV. Defaults to data/{min}v{max}_fight_data.csv",
-)
-def scrape(min_size: int, max_size: int, output: str | None = None) -> None:
+@click.option("--min-size", "-n", default=1, show_default=True, help="Min fight size")
+@click.option("--max-size", "-x", default=1, show_default=True, help="Max fight size")
+def scrape(min_size: int, max_size: int):
     """
-    Scrape Eden DAoC fight data for fights of size MIN_SIZE v MAX_SIZE,
-    append to existing CSV (if any), and save the result.
+    Scrape Eden DAoC fight data for fights of size MIN_SIZE v MAX_SIZE
+    and upsert into an SQLite database.
     """
-    # decide on output file
-    if output is None:
-        output = f"data/{min_size}v{max_size}_fight_data.csv"
-    out_path = Path(output)
-    out_path.parent.mkdir(parents=True, exist_ok=True)
+    # ensure DB & tables exist
+    click.echo("Initializing database...")
+    asyncio.run(init_db())
 
-    # load existing data so we can skip known IDs
-    if out_path.exists():
-        click.echo(f"Loading existing data from {out_path}")
-        existing_df = pd.read_csv(out_path)
-        known_ids = set(existing_df["ID"].astype(str))
-    else:
-        existing_df = pd.DataFrame()
-        known_ids = set()
-
-    # spin up Selenium, log in, fetch new fights
+    # run scraper
+    click.echo(f"Starting scraper for {min_size}v{max_size}…")
     driver = init_driver()
     try:
-        click.echo("Logging in to Eden DAoC…")
         token = login(driver)
-
-        click.echo(f"Fetching fight data for {min_size}v{max_size}…")
-        new_df = fetch_fight_data(
+        df = fetch_fight_data(
             driver=driver,
             min=min_size,
             max=max_size,
             token=token,
-            known_ids=known_ids,
+            known_ids=set(),  # DB dedupe will handle repeats
         )
     except Exception as e:
-        click.echo(f"Error during scraping: {e}", err=True)
+        click.echo(f"[ERROR] scraping failed: {e}", err=True)
         raise click.Abort()
     finally:
-        click.echo("Cleaning up driver…")
         cleanup(driver)
 
-    # combine and de-dupe
-    if not new_df.empty:
-        combined = pd.concat([existing_df, new_df], ignore_index=True)
-        combined.drop_duplicates(subset=["ID"], inplace=True)
-        combined.to_csv(out_path, index=False)
-        click.echo(f"Wrote {len(combined)} total rows to {out_path}")
-    else:
-        click.echo("No new fights found; nothing to write.")
+    if df.empty:
+        click.echo("No new data fetched; exiting.")
+        return
+
+    click.echo(f"Fetched {len(df)} rows; saving to database…")
+    asyncio.run(save_to_db(df))
+    click.echo("Done.")
 
 
 if __name__ == "__main__":
