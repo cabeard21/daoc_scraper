@@ -1,0 +1,11 @@
+selenium
+bs4
+aiohttp
+limits
+pandas
+python-dotenv
+sqlalchemy
+fastapi
+click
+aiosqlite
+uvicorn
