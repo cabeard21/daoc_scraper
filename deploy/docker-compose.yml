@@ -1,0 +1,26 @@
+version: '3.8'
+services:
+  api:
+    build: .
+    container_name: daoc_api
+    # run Uvicorn to serve FastAPI
+    command: uvicorn api:app --host 0.0.0.0 --port 8000
+    ports:
+      - '8010:8000'
+    volumes:
+      - ./data:/app/data
+      - ./.env:/app/.env:ro
+    environment:
+      - DATABASE_URL=sqlite+aiosqlite:///app/data/fights.db
+
+  scheduler:
+    build: .
+    container_name: daoc_scheduler
+    # run your APScheduler script
+    command: python scheduler.py
+    depends_on:
+      - api
+    volumes:
+      - ./data:/app/data
+      - ./.env:/app/.env:ro
+    restart: always
