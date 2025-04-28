@@ -19,6 +19,15 @@
             "args": [
                 "daoc_scraper/cli.py"
             ]
+        },
+        {
+            "name": "Scheduler",
+            "type": "python",
+            "request": "launch",
+            "module": "debugpy",
+            "args": [
+                "daoc_scraper/scheduler.py"
+            ]
         }
     ]
 }

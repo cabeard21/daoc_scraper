@@ -62,7 +62,7 @@ async def save_to_db(df: pd.DataFrame) -> None:
 @click.command()
 @click.option("--min-size", "-n", default=1, show_default=True, help="Min fight size")
 @click.option("--max-size", "-x", default=1, show_default=True, help="Max fight size")
-def scrape(min_size: int, max_size: int):
+def scrape(min_size: int, max_size: int) -> None:
     """
     Scrape Eden DAoC fight data for fights of size MIN_SIZE v MAX_SIZE
     and upsert into an SQLite database.

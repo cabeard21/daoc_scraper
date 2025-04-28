@@ -9,3 +9,4 @@ fastapi
 click
 aiosqlite
 uvicorn
+apscheduler

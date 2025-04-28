@@ -12,14 +12,26 @@ app = FastAPI(title="DAoC Fight Data API")
 @app.get("/fights/{fight_id}")
 async def get_fight(fight_id: str) -> dict[str, Any]:
     async with async_session() as session:
-        result = await session.execute(select(fights).where(fights.c.id == fight_id))
-        fight = result.scalar_one_or_none()
-        if not fight:
-            raise HTTPException(404, "Fight not found")
-        parts = await session.execute(
-            select(participants).where(participants.c.fight_id == fight_id)
+        # select just the JSON payload
+        result = await session.execute(
+            select(fights.c.fight_json).where(fights.c.id == fight_id)
         )
-        return {"fight": fight.fight_json, "participants": parts.all()}
+        fight_json = result.scalar_one_or_none()
+        if fight_json is None:
+            raise HTTPException(404, "Fight not found")
+
+        # fetch participants
+        parts = await session.execute(
+            select(participants.c.class_name, participants.c.win).where(
+                participants.c.fight_id == fight_id
+            )
+        )
+        # turn them into list[dict]
+        participants_list = [
+            {"class_name": cls, "win": win} for cls, win in parts.all()
+        ]
+
+    return {"fight": fight_json, "participants": participants_list}
 
 
 @app.get("/fights/")
