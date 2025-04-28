@@ -2,10 +2,11 @@
 from datetime import date
 from typing import Any
 
-from database import async_session
 from fastapi import FastAPI, HTTPException, Query
-from models import fights, participants
 from sqlalchemy import and_, select
+
+from daoc_scraper.database import async_session
+from daoc_scraper.models import fights, participants
 
 app = FastAPI(title="DAoC Fight Data API")
 
