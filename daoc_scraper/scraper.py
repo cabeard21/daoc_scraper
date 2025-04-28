@@ -1,5 +1,6 @@
 import asyncio
 import os
+import tempfile
 from enum import Enum
 from functools import partial
 from typing import Any
@@ -33,8 +34,16 @@ class Realm(Enum):
 def init_driver(headless: bool = True) -> WebDriver:
     # Initialize the WebDriver
     if headless:
+        # run headless, no sandbox, disable GPU & shared-mem usage
         options = Options()
-        options.add_argument("--headless")  # type: ignore
+        options.add_argument("--headless")
+        options.add_argument("--no-sandbox")
+        options.add_argument("--disable-dev-shm-usage")
+        options.add_argument("--disable-gpu")
+        options.add_argument("--disable-extensions")
+        # create a fresh temp dir for user-data so each session is isolated
+        tmp_profile = tempfile.mkdtemp(prefix="chrome-profile-")
+        options.add_argument(f"--user-data-dir={tmp_profile}")
         driver = webdriver.Chrome(options=options)
 
     else:
