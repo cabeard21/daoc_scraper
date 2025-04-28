@@ -21,7 +21,7 @@ async def init_db() -> None:
         await conn.run_sync(metadata.create_all)
 
 
-async def save_to_db(df: pd.DataFrame) -> None:
+async def save_to_db(df: pd.DataFrame, min_size: int, max_size: int) -> None:
     """
     Given the flat DataFrame with columns [ID, Class, Win, Date],
     group by ID to insert into fights + participants.
@@ -38,6 +38,8 @@ async def save_to_db(df: pd.DataFrame) -> None:
                     id=fight_id,
                     fight_json=group.to_dict(orient="records"),
                     date=fight_date,
+                    min_size=min_size,
+                    max_size=max_size,
                 )
                 .on_conflict_do_nothing(index_elements=["id"])
             )
@@ -94,7 +96,7 @@ def scrape(min_size: int, max_size: int) -> None:
         return
 
     click.echo(f"Fetched {len(df)} rows; saving to database…")
-    asyncio.run(save_to_db(df))
+    asyncio.run(save_to_db(df, min_size, max_size))
     click.echo("Done.")
 
 

@@ -1,10 +1,11 @@
 # api.py
+from datetime import date
 from typing import Any
 
 from database import async_session
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Query
 from models import fights, participants
-from sqlalchemy import select
+from sqlalchemy import and_, select
 
 app = FastAPI(title="DAoC Fight Data API")
 
@@ -35,12 +36,33 @@ async def get_fight(fight_id: str) -> dict[str, Any]:
 
 
 @app.get("/fights/")
-async def list_fights(skip: int = 0, limit: int = 100) -> list[Any]:
+async def list_fights(
+    min_size: int | None = Query(None, description="Minimum size of the fight"),
+    max_size: int | None = Query(None, description="Maximum size of the fight"),
+    date_from: date | None = Query(None, description="Filter fights from this date"),
+    date_to: date | None = Query(None, description="Filter fights to this date"),
+    skip: int = 0,
+    limit: int = 100,
+) -> list[str]:
+    q = select(fights)
+    filters = []
+    if min_size is not None:
+        filters.append(fights.c.min_size >= min_size)
+    if max_size is not None:
+        filters.append(fights.c.max_size <= max_size)
+    if date_from is not None:
+        filters.append(fights.c.date >= date_from)
+    if date_to is not None:
+        filters.append(fights.c.date <= date_to)
+    if filters:
+        q = q.where(and_(*filters))
+
+    q = q.order_by(fights.c.date.desc()).offset(skip).limit(limit)
+
     async with async_session() as session:
-        result = await session.execute(
-            select(fights).offset(skip).limit(limit).order_by(fights.c.date.desc())
-        )
-        return result.scalars().all()
+        result = await session.execute(q)
+        rows = result.mappings().all()
+        return [row["id"] for row in rows]
 
 
 if __name__ == "__main__":

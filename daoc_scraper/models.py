@@ -4,6 +4,7 @@ from sqlalchemy import (
     Column,
     DateTime,
     ForeignKey,
+    Integer,
     MetaData,
     Table,
     Text,
@@ -17,8 +18,10 @@ fights = Table(
     metadata,
     Column("id", Text, primary_key=True),
     Column("fight_json", JSON, nullable=False),
-    Column("date", DateTime, nullable=False),
+    Column("date", DateTime, nullable=False, index=True),
     Column("created_at", DateTime, server_default=func.now()),
+    Column("min_size", Integer, nullable=False, index=True),
+    Column("max_size", Integer, nullable=False, index=True),
 )
 
 participants = Table(
