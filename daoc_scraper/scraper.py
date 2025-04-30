@@ -1,9 +1,11 @@
 import asyncio
+import logging
 import os
+import tempfile
 from enum import Enum
 from functools import partial
 from typing import Any
-import logging
+
 import aiohttp
 import pandas as pd
 from bs4 import BeautifulSoup
@@ -22,7 +24,8 @@ from selenium.webdriver.support.ui import WebDriverWait
 
 load_dotenv()
 
-logging.basicConfig(level=logging.DEBUG)
+if os.getenv("DEBUG", "false") == "true":
+    logging.basicConfig(level=logging.DEBUG)
 
 
 class Realm(Enum):
@@ -39,6 +42,10 @@ def init_driver(headless: bool = True) -> webdriver.Chrome:
 
     # disable GPU
     options.add_argument("--disable-gpu")
+
+    # Create a unique temporary directory for user data
+    user_data_dir = tempfile.mkdtemp(prefix="chrome_user_data_")
+    options.add_argument(f"--user-data-dir={user_data_dir}")
 
     # Legacy headless mode (not the “new” headless)
     if headless:
