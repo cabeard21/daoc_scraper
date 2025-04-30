@@ -20,6 +20,8 @@ RUN apt-get update && \
       libgtk-3-0 \
       fonts-liberation \
       xdg-utils \
+      xauth \
+      xorg \
  && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
