@@ -3,7 +3,7 @@ import os
 from enum import Enum
 from functools import partial
 from typing import Any
-
+import logging
 import aiohttp
 import pandas as pd
 from bs4 import BeautifulSoup
@@ -21,6 +21,8 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 
 load_dotenv()
+
+logging.basicConfig(level=logging.DEBUG)
 
 
 class Realm(Enum):
@@ -66,6 +68,7 @@ def login(driver: WebDriver) -> str:
     Returns:
         str: the authentication token for the session.
     """
+    logging.debug("Attempting login...")
     # Navigate to the website
     driver.get("https://eden-daoc.net/herald")
 
@@ -74,6 +77,7 @@ def login(driver: WebDriver) -> str:
         # Retrieve the existing token from cookies
         token: dict[str, str] | None = driver.get_cookie("eden_daoc_sid")
         if token:
+            logging.debug("Already logged in, returning token...")
             return token["value"]
 
     # Initiate login
@@ -107,6 +111,7 @@ def login(driver: WebDriver) -> str:
     if token is None:
         raise ValueError("Failed to extract authentication token")
 
+    logging.debug("Login successful, returning token...")
     return token["value"]
 
 
