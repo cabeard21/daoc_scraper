@@ -31,4 +31,4 @@ services:
       - DISPLAY=host.docker.internal:0
       - LIBGL_ALWAYS_INDIRECT=1
       - HEADLESS=true
-    shm_size: 2gb
+      - SELENIUM_URL=http://68.183.151.160:4444

@@ -8,11 +8,14 @@ import os
 
 import click
 import pandas as pd
+from dotenv import load_dotenv
 from sqlalchemy.dialects.sqlite import insert as sqlite_insert
 
 from daoc_scraper.database import async_session, engine
 from daoc_scraper.models import fights, metadata, participants
 from daoc_scraper.scraper import cleanup, fetch_fight_data, init_driver, login
+
+load_dotenv()
 
 
 # ------------------------------------------------------------------------------

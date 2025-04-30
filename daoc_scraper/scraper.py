@@ -1,7 +1,6 @@
 import asyncio
 import logging
 import os
-import tempfile
 from enum import Enum
 from functools import partial
 from typing import Any
@@ -35,23 +34,24 @@ class Realm(Enum):
     ALB = "alb"
 
 
-def init_driver(headless: bool = True) -> webdriver.Chrome:
+def init_driver(headless: bool = True) -> webdriver.Remote | webdriver.Chrome:
+    """
+    If SELENIUM_URL is set, spins up a Remote WebDriver to that URL.
+    Otherwise falls back to local Chrome.
+    """
     options = Options()
-    # required for unprivileged containers
     options.add_argument("--no-sandbox")
-
-    # disable GPU
     options.add_argument("--disable-gpu")
 
-    # Create a unique temporary directory for user data
-    user_data_dir = tempfile.mkdtemp(prefix="chrome_user_data_")
-    options.add_argument(f"--user-data-dir={user_data_dir}")
-
-    # Legacy headless mode (not the “new” headless)
     if headless:
         options.add_argument("--headless")
 
-    return webdriver.Chrome(options=options)
+    remote_url = os.getenv("SELENIUM_URL")
+    if remote_url:
+        return webdriver.Remote(command_executor=remote_url, options=options)
+    else:
+        # fallback: assume chromedriver is on PATH
+        return webdriver.Chrome(options=options)
 
 
 def is_logged_in(driver: WebDriver) -> bool:

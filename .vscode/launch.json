@@ -18,8 +18,10 @@
             "module": "debugpy",
             "args": [
                 "daoc_scraper/cli.py",
+                "--min-size",
                 "1",
-                "8"
+                "--max-size",
+                "1"
             ]
         },
         {
