@@ -1,9 +1,8 @@
 # deploy/docker-compose.yml
-version: '3.8'
 services:
   api:
     build:
-      context: ..               
+      context: ..
       dockerfile: deploy/Dockerfile
     working_dir: /app
     command: uvicorn daoc_scraper.api:app --host 0.0.0.0 --port 8010
@@ -11,10 +10,9 @@ services:
       - '8010:8010'
     volumes:
       - ../data:/app/data
-      - ../.env:/app/.env:ro
     environment:
       - DATABASE_URL=sqlite+aiosqlite:///app/data/fights.db
-
+      - PYTHONUNBUFFERED=1
   scheduler:
     build:
       context: ..                
@@ -26,4 +24,11 @@ services:
     volumes:
       - ../data:/app/data
       - ../.env:/app/.env:ro
+      - /tmp/.X11-unix:/tmp/.X11-unix
     restart: always
+    environment:
+      - PYTHONUNBUFFERED=1
+      - DISPLAY=host.docker.internal:0
+      - LIBGL_ALWAYS_INDIRECT=1
+      - HEADLESS=true
+    shm_size: 2gb
