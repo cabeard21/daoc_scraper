@@ -9,24 +9,23 @@ import subprocess
 import sys
 
 from apscheduler.schedulers.blocking import BlockingScheduler
-from apscheduler.triggers.cron import CronTrigger
 
 # Use the same Python that launched this script
 PYTHON = sys.executable
 CLI_MODULE = "daoc_scraper.cli"
 
 
-def scrape_size(size: int) -> None:
-    """Invoke the CLI for a given fight size (size v size)."""
+def scrape_all_sizes() -> None:
+    """Invoke the CLI for all fight sizes (1v1 through 8v8)."""
     subprocess.run(
         [
             PYTHON,
             "-m",
             CLI_MODULE,
             "--min-size",
-            str(size),
+            "1",
             "--max-size",
-            str(size),
+            "8",
         ],
         check=True,
     )
@@ -39,19 +38,16 @@ if __name__ == "__main__":
     # How often to run (e.g. every hour)
     INTERVAL_HOURS = 1
 
-    # Schedule one job per fight-size from 1v1 through 8v8
-    for i in range(1, 9):
-        minute_offset = (i - 1) * 7  # 0, 7, 14, 21, …
-        trigger = CronTrigger(minute=str(minute_offset), hour="*")
-        scheduler.add_job(
-            scrape_size,
-            trigger=trigger,
-            args=[i],
-            id=f"cron_scrape_{i}v{i}",
-            name=f"Cron‐Scrape {i}v{i}",
-        )
+    # Schedule one job to scrape all sizes (1v1 through 8v8) once every hour
+    scheduler.add_job(
+        scrape_all_sizes,
+        trigger="interval",
+        hours=INTERVAL_HOURS,
+        id="scrape_all_sizes",
+        name="Scrape All Sizes (1v1–8v8)",
+    )
 
-    print(f"Starting scheduler: scraping every {INTERVAL_HOURS}h for sizes 1v1–8v8")
+    print(f"Starting scheduler: scraping all sizes every {INTERVAL_HOURS}h")
     try:
         scheduler.start()
     except (KeyboardInterrupt, SystemExit):

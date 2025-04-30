@@ -4,6 +4,7 @@ CLI entrypoint for daoc_scraper: scrape DAoC fight data and save into SQLite.
 """
 
 import asyncio
+import os
 
 import click
 import pandas as pd
@@ -74,29 +75,36 @@ def scrape(min_size: int, max_size: int) -> None:
     asyncio.run(init_db())
 
     # run scraper
-    click.echo(f"Starting scraper for {min_size}v{max_size}…")
-    driver = init_driver()
+    click.echo(f"Starting scraper for {min_size}v{min_size} to {max_size}v{max_size}…")
+    driver = init_driver(os.getenv("HEADLESS", "false") == "true")
     try:
         token = login(driver)
-        df = fetch_fight_data(
-            driver=driver,
-            min=min_size,
-            max=max_size,
-            token=token,
-            known_ids=set(),  # DB dedupe will handle repeats
-        )
+        for fight_size in range(min_size, max_size + 1):
+            click.echo(f"Scraping {fight_size}v{fight_size}…")
+            df = fetch_fight_data(
+                driver=driver,
+                min=fight_size,
+                max=fight_size,
+                token=token,
+                known_ids=set(),  # DB dedupe will handle repeats
+            )
+            if df.empty:
+                click.echo(
+                    f"No new data fetched for {fight_size}v{fight_size}; skipping…"
+                )
+                continue
+
+            click.echo(
+                f"Fetched {len(df)} rows for {fight_size}v{fight_size}; "
+                f"saving to database…"
+            )
+            asyncio.run(save_to_db(df, fight_size, fight_size))
     except Exception as e:
         click.echo(f"[ERROR] scraping failed: {e}", err=True)
         raise click.Abort()
     finally:
         cleanup(driver)
 
-    if df.empty:
-        click.echo("No new data fetched; exiting.")
-        return
-
-    click.echo(f"Fetched {len(df)} rows; saving to database…")
-    asyncio.run(save_to_db(df, min_size, max_size))
     click.echo("Done.")
 
 

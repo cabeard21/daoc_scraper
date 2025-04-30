@@ -17,7 +17,9 @@
             "request": "launch",
             "module": "debugpy",
             "args": [
-                "daoc_scraper/cli.py"
+                "daoc_scraper/cli.py",
+                "1",
+                "8"
             ]
         },
         {
