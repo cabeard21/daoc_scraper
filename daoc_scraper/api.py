@@ -29,7 +29,12 @@ app.add_middleware(HTTPSRedirectMiddleware)
 
 # Only allow Host headers matching your domain
 app.add_middleware(
-    TrustedHostMiddleware, allowed_hosts=["daoc-api.yourdomain.com", "*.yourdomain.com"]
+    TrustedHostMiddleware,
+    allowed_hosts=[
+        "68.183.151.160.nip.io",  # your nip.io hostname
+        "localhost",  # for local dev, if you need it
+        "127.0.0.1",  # if you ever curl inside the container
+    ],
 )
 
 app.add_middleware(
