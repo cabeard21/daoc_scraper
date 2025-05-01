@@ -116,6 +116,9 @@ async def list_fights(
         return [row["id"] for row in rows]
 
 
+app.include_router(router)
+
+
 if __name__ == "__main__":
     import uvicorn
 
