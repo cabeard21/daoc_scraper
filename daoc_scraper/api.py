@@ -1,17 +1,59 @@
 # api.py
+import os
 from datetime import date
 from typing import Any
 
-from fastapi import FastAPI, HTTPException, Query
+from fastapi import APIRouter, Depends, FastAPI, HTTPException, Query, Security
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.httpsredirect import HTTPSRedirectMiddleware
+from fastapi.middleware.trustedhost import TrustedHostMiddleware
+from fastapi.security import APIKeyHeader
 from sqlalchemy import and_, select
+from uvicorn.middleware.proxy_headers import ProxyHeadersMiddleware
 
 from daoc_scraper.database import async_session
 from daoc_scraper.models import fights, participants
 
-app = FastAPI(title="DAoC Fight Data API")
+app = FastAPI(
+    title="DAoC Fight Data API",
+    docs_url=None,  # disable Swagger UI
+    redoc_url=None,  # disable ReDoc
+    openapi_url=None,  # disable OpenAPI schema
+)
+
+# Trust X-Forwarded headers from Nginx
+app.add_middleware(ProxyHeadersMiddleware, trusted_hosts="*")
+
+# Redirect any HTTP→HTTPS (in case someone hits port 8010 directly)
+app.add_middleware(HTTPSRedirectMiddleware)
+
+# Only allow Host headers matching your domain
+app.add_middleware(
+    TrustedHostMiddleware, allowed_hosts=["daoc-api.yourdomain.com", "*.yourdomain.com"]
+)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["https://your-frontend.com"],  # your client
+    allow_credentials=True,
+    allow_methods=["GET", "POST"],
+    allow_headers=["Authorization", "Content-Type"],
+)
+
+api_key_header = APIKeyHeader(name="X-API-Key", auto_error=False)
 
 
-@app.get("/fights/{fight_id}")
+async def require_api_key(key: str = Security(api_key_header)) -> str:
+    secret = os.getenv("DAOC_API_KEY")
+    if not key or key != secret:
+        raise HTTPException(403, detail="Invalid or missing API Key")
+    return key
+
+
+router = APIRouter(dependencies=[Depends(require_api_key)])
+
+
+@router.get("/fights/{fight_id}")
 async def get_fight(fight_id: str) -> dict[str, Any]:
     async with async_session() as session:
         # select just the JSON payload
@@ -36,7 +78,7 @@ async def get_fight(fight_id: str) -> dict[str, Any]:
     return {"fight": fight_json, "participants": participants_list}
 
 
-@app.get("/fights/")
+@router.get("/fights/")
 async def list_fights(
     min_size: int | None = Query(None, description="Minimum size of the fight"),
     max_size: int | None = Query(None, description="Maximum size of the fight"),
