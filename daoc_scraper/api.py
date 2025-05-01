@@ -55,7 +55,7 @@ async def require_api_key(key: str = Security(api_key_header)) -> str:
 router = APIRouter(dependencies=[Depends(require_api_key)])
 
 
-@app.lifespan_context()
+@app.on_event("startup")
 async def list_routes() -> None:
     routes = [route.path for route in app.router.routes]
     logging.getLogger("uvicorn.error").info(f"Registered routes: {routes}")
