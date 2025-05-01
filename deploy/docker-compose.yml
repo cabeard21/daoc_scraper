@@ -20,7 +20,6 @@ services:
     environment:
       - DATABASE_URL=sqlite+aiosqlite:///app/data/fights.db
       - PYTHONUNBUFFERED=1
-      - DAOC_API_KEY=${DAOC_API_KEY}
     networks:
       - api_net
   nginx:
