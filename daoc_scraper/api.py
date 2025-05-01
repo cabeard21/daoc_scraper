@@ -5,7 +5,6 @@ from typing import Any
 
 from fastapi import APIRouter, Depends, FastAPI, HTTPException, Query, Security
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.middleware.httpsredirect import HTTPSRedirectMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from fastapi.security import APIKeyHeader
 from sqlalchemy import and_, select
@@ -23,9 +22,6 @@ app = FastAPI(
 
 # Trust X-Forwarded headers from Nginx
 app.add_middleware(ProxyHeadersMiddleware, trusted_hosts="*")
-
-# Redirect any HTTP→HTTPS (in case someone hits port 8010 directly)
-app.add_middleware(HTTPSRedirectMiddleware)
 
 # Only allow Host headers matching your domain
 app.add_middleware(
