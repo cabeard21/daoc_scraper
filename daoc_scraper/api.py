@@ -31,7 +31,7 @@ app.add_middleware(ProxyHeadersMiddleware, trusted_hosts="*")
 app.add_middleware(
     TrustedHostMiddleware,
     allowed_hosts=[
-        "152.42.154.122.nip.io",  # your nip.io hostname
+        "www.daocapi.com",  # your nip.io hostname
         "localhost",  # for local dev, if you need it
         "127.0.0.1",  # if you ever curl inside the container
     ],
@@ -39,7 +39,7 @@ app.add_middleware(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["https://your-frontend.com"],  # your client
+    allow_origins=["https://www.daocapi.com"],  # your client
     allow_credentials=True,
     allow_methods=["GET", "POST"],
     allow_headers=["Authorization", "Content-Type"],
