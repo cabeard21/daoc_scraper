@@ -37,12 +37,14 @@ if __name__ == "__main__":
 
     # How often to run (e.g. every hour)
     INTERVAL_HOURS = 1
+    JITTER_SECONDS = 300
 
     # Schedule one job to scrape all sizes (1v1 through 8v8) once every hour
     scheduler.add_job(
         scrape_all_sizes,
         trigger="interval",
         hours=INTERVAL_HOURS,
+        jitter=JITTER_SECONDS,
         id="scrape_all_sizes",
         name="Scrape All Sizes (1v1–8v8)",
     )
