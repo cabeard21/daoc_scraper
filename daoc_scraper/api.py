@@ -1,4 +1,5 @@
 # api.py
+import logging
 import os
 from datetime import date
 from typing import Any
@@ -52,6 +53,12 @@ async def require_api_key(key: str = Security(api_key_header)) -> str:
 
 
 router = APIRouter(dependencies=[Depends(require_api_key)])
+
+
+@app.lifespan_context()
+async def list_routes() -> None:
+    routes = [route.path for route in app.router.routes]
+    logging.getLogger("uvicorn.error").info(f"Registered routes: {routes}")
 
 
 @router.get("/fights/{fight_id}")
