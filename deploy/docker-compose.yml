@@ -5,7 +5,7 @@ services:
       context: ..
       dockerfile: deploy/Dockerfile
     working_dir: /app
-    command: uvicorn daoc_scraper.api:app --host 127.0.0.1 --port 8010 --proxy-headers
+    command: uvicorn daoc_scraper.api:app --host 0.0.0.0--port 8010 --proxy-headers
     restart: always
     ports:
       - '8010:8010'
