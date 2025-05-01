@@ -4,6 +4,7 @@ import os
 from datetime import date
 from typing import Any
 
+from dotenv import load_dotenv
 from fastapi import APIRouter, Depends, FastAPI, HTTPException, Query, Security
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
@@ -13,6 +14,8 @@ from uvicorn.middleware.proxy_headers import ProxyHeadersMiddleware
 
 from daoc_scraper.database import async_session
 from daoc_scraper.models import fights, participants
+
+load_dotenv()
 
 app = FastAPI(
     title="DAoC Fight Data API",

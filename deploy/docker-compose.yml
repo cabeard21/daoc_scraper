@@ -16,6 +16,7 @@ services:
       - '8010:8010'
     volumes:
       - ../data:/app/data
+      - ../.env:/app/.env:ro
     environment:
       - DATABASE_URL=sqlite+aiosqlite:///app/data/fights.db
       - PYTHONUNBUFFERED=1
