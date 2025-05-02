@@ -7,6 +7,7 @@ Run the daoc_scraper.cli scrape command for 1v1, 2v2, … 8v8 at a fixed interva
 
 import subprocess
 import sys
+from datetime import datetime
 
 from apscheduler.schedulers.blocking import BlockingScheduler
 
@@ -47,6 +48,10 @@ if __name__ == "__main__":
         jitter=JITTER_SECONDS,
         id="scrape_all_sizes",
         name="Scrape All Sizes (1v1–8v8)",
+        max_instances=1,
+        coalesce=True,
+        next_run_time=datetime.now(),
+        misfire_grace_time=600,
     )
 
     print(f"Starting scheduler: scraping all sizes every {INTERVAL_HOURS}h")
