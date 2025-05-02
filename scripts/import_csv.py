@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import asyncio
+import os
 import sys
 
 import pandas as pd
@@ -7,6 +8,9 @@ import pandas as pd
 from ..daoc_scraper.cli import save_to_db  # re-uses your async save logic
 from ..daoc_scraper.database import engine
 from ..daoc_scraper.models import metadata
+
+# make sure “your-project” is on sys.path
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 
 async def init_db() -> None:
