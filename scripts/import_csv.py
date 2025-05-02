@@ -45,6 +45,14 @@ def normalize_csv(path: str) -> list[tuple[pd.DataFrame, int, int]]:
                     }
                 )
         df_flat = pd.DataFrame(rows)
+
+        # normalize to ISO-8601 + UTC offset so it matches the scraper output
+        df_flat["Date"] = (
+            pd.to_datetime(df_flat["Date"])  # parse "4/16/2025", etc.
+            .dt.tz_localize("UTC")  # make it timezone-aware
+            .dt.strftime("%Y-%m-%dT%H:%M:%S%z")  # format as "2025-04-16T00:00:00+0000"
+        )
+
         imports.append((df_flat, min_size, max_size))
     return imports
 
