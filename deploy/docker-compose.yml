@@ -51,6 +51,7 @@ services:
       - PYTHONUNBUFFERED=1
       - DISPLAY=host.docker.internal:0
       - LIBGL_ALWAYS_INDIRECT=1
+      - SELENIUM_URL=http://selenium:4444/wd/hub
     networks:
       - selenium_net
 networks:

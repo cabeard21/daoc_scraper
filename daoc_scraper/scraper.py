@@ -20,6 +20,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.remote.client_config import ClientConfig
 
 load_dotenv()
 
@@ -48,7 +49,14 @@ def init_driver(headless: bool = True) -> webdriver.Remote | webdriver.Chrome:
 
     remote_url = os.getenv("SELENIUM_URL")
     if remote_url:
-        return webdriver.Remote(command_executor=remote_url, options=options)
+        client_config = ClientConfig(
+            remote_server_addr=remote_url,
+            username=os.getenv("SELENIUM_USERNAME"),
+            password=os.getenv("SELENIUM_PASSWORD"),
+        )
+        return webdriver.Remote(
+            command_executor=remote_url, options=options, client_config=client_config
+        )
     else:
         # fallback: assume chromedriver is on PATH
         return webdriver.Chrome(options=options)
