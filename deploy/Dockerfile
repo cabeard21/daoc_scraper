@@ -10,12 +10,16 @@ WORKDIR /app
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# copy your code
-COPY daoc_scraper/ daoc_scraper/
+# create data dir and non-root user, then set ownership
+RUN mkdir /app/data \
+ && useradd --no-create-home --shell /usr/sbin/nologin appuser \
+ && chown -R appuser:appuser /app/data /app
 
-# create a non-root user
-RUN useradd --no-create-home --shell /usr/sbin/nologin appuser
+# now switch
 USER appuser
+
+# copy your code as unprivileged user
+COPY --chown=appuser:appuser daoc_scraper/ daoc_scraper/
 
 # default is to do nothing
 CMD ["bash", "-c", "echo 'Specify a service command.'"]
