@@ -20,6 +20,7 @@ USER appuser
 
 # copy your code as unprivileged user
 COPY --chown=appuser:appuser daoc_scraper/ daoc_scraper/
+RUN chown -R appuser:appuser /app/data
 
 # default is to do nothing
 CMD ["bash", "-c", "echo 'Specify a service command.'"]
