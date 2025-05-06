@@ -34,6 +34,7 @@ app.add_middleware(
         "www.daocapi.com",  # your nip.io hostname
         "localhost",  # for local dev, if you need it
         "127.0.0.1",  # if you ever curl inside the container
+        "99.97.141.9",
     ],
 )
 
