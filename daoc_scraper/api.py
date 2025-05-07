@@ -13,7 +13,7 @@ from sqlalchemy import and_, select
 from uvicorn.middleware.proxy_headers import ProxyHeadersMiddleware
 
 from daoc_scraper.database import async_session
-from daoc_scraper.models import fights, participants
+from daoc_scraper.models import BulkQuery, fights, participants
 
 load_dotenv()
 
@@ -118,6 +118,41 @@ async def list_fights(
         result = await session.execute(q)
         rows = result.mappings().all()
         return [row["id"] for row in rows]
+
+
+@router.post("/fights/bulk")
+async def get_fights_bulk(q: BulkQuery) -> dict[str, Any]:
+    # build the SELECT
+    stmt = (
+        select(
+            fights.c.id,
+            fights.c.fight_json,
+            participants.c.class_name,
+            participants.c.win,
+        )
+        .join(participants, fights.c.id == participants.c.fight_id)
+        .where(fights.c.id.in_(q.ids))
+    )
+
+    # run the query in a session
+    async with async_session() as session:
+        result = await session.execute(stmt)
+        rows = result.mappings().all()
+
+    # aggregate one dict entry per fight
+    aggregated: dict[str, dict[str, Any]] = {}
+    for row in rows:
+        fight_id = row["id"]
+        if fight_id not in aggregated:
+            aggregated[fight_id] = {"fight": row["fight_json"], "participants": []}
+        aggregated[fight_id]["participants"].append(
+            {
+                "class_name": row["class_name"],
+                "win": row["win"],
+            }
+        )
+
+    return aggregated
 
 
 app.include_router(router)

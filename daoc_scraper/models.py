@@ -10,6 +10,7 @@ from sqlalchemy import (
     Text,
     func,
 )
+from pydantic import BaseModel
 
 metadata = MetaData()
 
@@ -31,3 +32,7 @@ participants = Table(
     Column("class_name", Text, nullable=False),
     Column("win", Boolean, nullable=False),
 )
+
+
+class BulkQuery(BaseModel):
+    ids: list[str]
