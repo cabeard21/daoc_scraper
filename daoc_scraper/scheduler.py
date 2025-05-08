@@ -38,7 +38,7 @@ if __name__ == "__main__":
 
     # How often to run (e.g. every hour)
     INTERVAL_HOURS = 1
-    JITTER_SECONDS = 300
+    JITTER_SECONDS = 600
 
     # Schedule one job to scrape all sizes (1v1 through 8v8) once every hour
     scheduler.add_job(
