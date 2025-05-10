@@ -57,6 +57,7 @@ async def save_to_db(df: pd.DataFrame, min_size: int, max_size: int) -> None:
                     .values(
                         fight_id=fight_id,
                         class_name=row["Class"],
+                        name=row["Name"],
                         win=bool(row["Win"]),
                     )
                 )

@@ -210,6 +210,7 @@ def extract_fight_details(
 
     # Prepare lists to hold DataFrame data
     ids: list[str] = []
+    character_names: list[str] = []
     class_names: list[str] = []
     wins: list[bool] = []
     dates: list[str] = []
@@ -218,6 +219,7 @@ def extract_fight_details(
     for participant in fight_json["a"]["p"]:
         class_id = participant["c"]
         class_names.append(id_to_class_name.get(class_id, "Unknown"))
+        character_names.append(participant["n"])
         wins.append(True)  # These participants are winners
         dates.append(fight_date)
         ids.append(fight_json["id"])
@@ -226,12 +228,21 @@ def extract_fight_details(
     for participant in fight_json["b"]["p"]:
         class_id = participant["c"]
         class_names.append(id_to_class_name.get(class_id, "Unknown"))
+        character_names.append(participant["n"])
         wins.append(False)  # These participants are losers
         dates.append(fight_date)
         ids.append(fight_json["id"])
 
     # Create the DataFrame
-    df = pd.DataFrame({"ID": ids, "Class": class_names, "Win": wins, "Date": dates})
+    df = pd.DataFrame(
+        {
+            "ID": ids,
+            "Class": class_names,
+            "Win": wins,
+            "Date": dates,
+            "Name": character_names,
+        }
+    )
 
     return df
 
