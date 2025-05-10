@@ -27,16 +27,17 @@ async def init_db() -> None:
 
 async def save_to_db(df: pd.DataFrame, min_size: int, max_size: int) -> None:
     """
-    Given the flat DataFrame with columns [ID, Class, Win, Date],
-    group by ID to insert into fights + participants.
+    Given the flat DataFrame with columns [ID, Class, Win, Date, Name],
+    group by ID to insert into fights + participants, updating any existing
+    rows that lack the Name or have changed class_name/win.
     """
     async with async_session() as session:
         for fight_id, group in df.groupby("ID"):
             # fight date is same for all rows in this group
             fight_date = pd.to_datetime(group["Date"].iloc[0])
 
-            # prepare upsert for fights
-            stmt = (
+            # ── upsert fights table (unchanged) ─────────────────────────────
+            fight_stmt = (
                 sqlite_insert(fights)
                 .values(
                     id=fight_id,
@@ -47,20 +48,26 @@ async def save_to_db(df: pd.DataFrame, min_size: int, max_size: int) -> None:
                 )
                 .on_conflict_do_nothing(index_elements=["id"])
             )
-            await session.execute(stmt)
+            await session.execute(fight_stmt)
 
-            # insert participants
+            # ── upsert participants ───────────────────────────────────────
+            # requires that you have a UNIQUE constraint on (fight_id, name)
             for _, row in group.iterrows():
-                await session.execute(
-                    participants.insert()
-                    .prefix_with("OR IGNORE")
-                    .values(
-                        fight_id=fight_id,
-                        class_name=row["Class"],
-                        name=row["Name"],
-                        win=bool(row["Win"]),
-                    )
+                part_stmt = sqlite_insert(participants).values(
+                    fight_id=fight_id,
+                    class_name=row["Class"],
+                    name=row["Name"],
+                    win=bool(row["Win"]),
                 )
+                upsert_stmt = part_stmt.on_conflict_do_update(
+                    index_elements=["fight_id", "name"],
+                    set_={
+                        # update class_name & win if they differ
+                        "class_name": part_stmt.excluded.class_name,
+                        "win": part_stmt.excluded.win,
+                    },
+                )
+                await session.execute(upsert_stmt)
 
         await session.commit()
 

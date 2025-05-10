@@ -1,3 +1,4 @@
+from pydantic import BaseModel
 from sqlalchemy import (
     JSON,
     Boolean,
@@ -8,9 +9,9 @@ from sqlalchemy import (
     MetaData,
     Table,
     Text,
+    UniqueConstraint,
     func,
 )
-from pydantic import BaseModel
 
 metadata = MetaData()
 
@@ -32,6 +33,7 @@ participants = Table(
     Column("class_name", Text, nullable=False),
     Column("name", Text, nullable=False),
     Column("win", Boolean, nullable=False),
+    UniqueConstraint("fight_id", "name", name="uix_fight_name"),
 )
 
 
