@@ -78,13 +78,14 @@ async def get_fight(fight_id: str) -> dict[str, Any]:
 
         # fetch participants
         parts = await session.execute(
-            select(participants.c.class_name, participants.c.win).where(
-                participants.c.fight_id == fight_id
-            )
+            select(
+                participants.c.class_name, participants.c.win, participants.c.name
+            ).where(participants.c.fight_id == fight_id)
         )
         # turn them into list[dict]
         participants_list = [
-            {"class_name": cls, "win": win} for cls, win in parts.all()
+            {"class_name": cls, "win": win, "name": name}
+            for cls, win, name in parts.all()
         ]
 
     return {"fight": fight_json, "participants": participants_list}
@@ -129,6 +130,7 @@ async def get_fights_bulk(q: BulkQuery) -> dict[str, Any]:
             fights.c.fight_json,
             participants.c.class_name,
             participants.c.win,
+            participants.c.name,
         )
         .join(participants, fights.c.id == participants.c.fight_id)
         .where(fights.c.id.in_(q.ids))
@@ -148,6 +150,7 @@ async def get_fights_bulk(q: BulkQuery) -> dict[str, Any]:
         aggregated[fight_id]["participants"].append(
             {
                 "class_name": row["class_name"],
+                "name": row["name"],
                 "win": row["win"],
             }
         )
