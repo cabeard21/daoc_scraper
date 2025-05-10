@@ -10,3 +10,4 @@ click
 aiosqlite
 uvicorn
 apscheduler
+alembic

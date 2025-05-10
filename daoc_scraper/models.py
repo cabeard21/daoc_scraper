@@ -30,6 +30,7 @@ participants = Table(
     metadata,
     Column("fight_id", Text, ForeignKey("fights.id")),
     Column("class_name", Text, nullable=False),
+    Column("name", Text, nullable=False),
     Column("win", Boolean, nullable=False),
 )
 
