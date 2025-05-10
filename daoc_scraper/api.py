@@ -17,39 +17,46 @@ from daoc_scraper.models import BulkQuery, fights, participants
 
 load_dotenv()
 
+DEBUG = os.getenv("DEBUG", "").lower() in ("1", "true", "yes")
+
 app = FastAPI(
     title="DAoC Fight Data API",
-    docs_url=None,  # disable Swagger UI
-    redoc_url=None,  # disable ReDoc
-    openapi_url=None,  # disable OpenAPI schema
+    docs_url="/docs" if DEBUG else None,  # disable Swagger UI
+    redoc_url="/redoc" if DEBUG else None,  # disable ReDoc
+    openapi_url="/openapi.json" if DEBUG else None,  # disable OpenAPI schema
+    debug=DEBUG,
 )
 
-# Trust X-Forwarded headers from Nginx
-app.add_middleware(ProxyHeadersMiddleware, trusted_hosts="*")
+if not DEBUG:
+    # Trust X-Forwarded headers from Nginx
+    app.add_middleware(ProxyHeadersMiddleware, trusted_hosts="*")
 
-# Only allow Host headers matching your domain
-app.add_middleware(
-    TrustedHostMiddleware,
-    allowed_hosts=[
-        "www.daocapi.com",  # your nip.io hostname
-        "localhost",  # for local dev, if you need it
-        "127.0.0.1",  # if you ever curl inside the container
-        "99.97.141.9",
-    ],
-)
+    # Only allow Host headers matching your domain
+    app.add_middleware(
+        TrustedHostMiddleware,
+        allowed_hosts=[
+            "www.daocapi.com",  # your nip.io hostname
+            "localhost",  # for local dev, if you need it
+            "127.0.0.1",  # if you ever curl inside the container
+            "99.97.141.9",
+        ],
+    )
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["https://www.daocapi.com"],  # your client
-    allow_credentials=True,
-    allow_methods=["GET", "POST"],
-    allow_headers=["Authorization", "Content-Type"],
-)
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=["https://www.daocapi.com"],  # your client
+        allow_credentials=True,
+        allow_methods=["GET", "POST"],
+        allow_headers=["Authorization", "Content-Type"],
+    )
 
 api_key_header = APIKeyHeader(name="X-API-Key", auto_error=False)
 
 
 async def require_api_key(key: str = Security(api_key_header)) -> str:
+    if DEBUG:
+        return key or "DEBUG"
+
     secret = os.getenv("DAOC_API_KEY")
     if not key or key != secret:
         raise HTTPException(403, detail="Invalid or missing API Key")
@@ -164,9 +171,12 @@ app.include_router(router)
 if __name__ == "__main__":
     import uvicorn
 
+    os.environ["DEBUG"] = "1"
+
     uvicorn.run(
-        "api:app",  # module:variable
+        "api:app",
         host="0.0.0.0",
         port=8000,
-        reload=True,  # dev hot‐reload
+        reload=DEBUG,
+        log_level="debug" if DEBUG else "info",
     )
