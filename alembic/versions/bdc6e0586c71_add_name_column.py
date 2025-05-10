@@ -26,7 +26,7 @@ def upgrade() -> None:
     )
 
     # remove the default so new inserts must specify it
-    op.alter_column("fight_participants", "name", server_default=None)
+    # op.alter_column("fight_participants", "name", server_default=None)
 
 
 def downgrade() -> None:
