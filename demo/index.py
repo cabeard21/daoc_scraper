@@ -35,7 +35,15 @@ async def get_fight_data(
     post_options = Object.fromEntries(
         [
             ["method", "POST"],
-            ["headers", Object.fromEntries([["X-API-Key", api_key]])],
+            [
+                "headers",
+                Object.fromEntries(
+                    [
+                        ["X-API-Key", api_key],
+                        ["Content-Type", "application/json"],
+                    ]
+                ),
+            ],
             ["body", payload],
         ]
     )
