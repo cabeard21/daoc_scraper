@@ -17,10 +17,12 @@ async def get_fight_data(
 ) -> pd.DataFrame:
     update_status("Fetching IDs...")
     # 1. Get IDs
-    headers = Object.fromEntries([["X-API-Key", api_key]])
+    options = Object.fromEntries(
+        [["headers", Object.fromEntries([["X-API-Key", api_key]])]]
+    )
 
     params = f"?min_size={min_size}&max_size={max_size}&limit=500"
-    response = await fetch(f"{API_BASE}/fights/{params}", {"headers": headers})
+    response = await fetch(f"{API_BASE}/fights/{params}", options)
     id_list = await response.json()
 
     if not id_list:
@@ -30,14 +32,14 @@ async def get_fight_data(
     update_status(f"Fetched {len(id_list)} IDs, requesting bulk data...")
     # JS fetch requires body to be JSON string
     payload = JSON.stringify({"ids": id_list})
-    resp2 = await fetch(
-        f"{API_BASE}/fights/bulk",
-        {
-            "method": "POST",
-            "headers": headers,
-            "body": payload,
-        },
+    post_options = Object.fromEntries(
+        [
+            ["method", "POST"],
+            ["headers", Object.fromEntries([["X-API-Key", api_key]])],
+            ["body", payload],
+        ]
     )
+    resp2 = await fetch(f"{API_BASE}/fights/bulk", post_options)
     bulk = await resp2.json()
     # 3. Flatten data to rows
     rows = []
