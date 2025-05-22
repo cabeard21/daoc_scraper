@@ -17,12 +17,18 @@ async def get_fight_data(
 ) -> pd.DataFrame:
     update_status("Fetching IDs...")
     # 1. Get IDs
+    import js
+
     params = f"?min_size={min_size}&max_size={max_size}&limit=500"
     print("API key to be sent:", api_key)
-    resp = await fetch(
-        f"{API_BASE}/fights/{params}", {"headers": {"X-API-Key": api_key}}
+    response = await js.fetch(
+        f"{API_BASE}/fights/{params}",
+        js.Object.fromEntries(
+            [["headers", js.Object.fromEntries([["X-API-Key", api_key]])]]
+        ),
     )
-    id_list = await resp.json()
+    id_list = await response.json()
+
     if not id_list:
         update_status("No fights found.")
         return pd.DataFrame()
@@ -105,6 +111,7 @@ def on_fetch_click(event=None) -> None:
 
 async def fetch_and_analyze() -> None:
     api_key = document.getElementById("api-key-input").value
+    api_key = api_key.strip()
     if not api_key:
         update_status("Please enter your API key.")
         return
