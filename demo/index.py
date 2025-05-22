@@ -3,7 +3,7 @@ import asyncio
 import numpy as np
 import pandas as pd
 from js import JSON, Headers, Object, Plotly, document, fetch
-from pyodide.ffi import create_proxy, to_js
+from pyscript.ffi import create_proxy, to_js
 
 API_BASE = "https://www.daocapi.com"
 
