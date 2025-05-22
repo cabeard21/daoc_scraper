@@ -31,13 +31,17 @@ async def get_fight_data(
     # 2. POST /fights/bulk for fight data
     update_status(f"Fetched {len(id_list)} IDs, requesting bulk data...")
 
-    print(type(id_list), id_list)  # Show you what you have!
-    ids_py = id_list.to_py()  # Convert PyProxy to Python list
-    print(type(ids_py), ids_py[:5])  # Sanity check
-    ids_js = to_js(ids_py)  # Now native JS array
+    # Step 1: Convert PyProxy to Python list
+    ids_py = id_list.to_py()
+    print(type(ids_py), ids_py[:5])  # Should be <class 'list'>
 
+    # Step 2: Convert Python list to JS Array
+    ids_js = to_js(ids_py, dict_converter=None)
+    print("JS array?", ids_js, type(ids_js))
+
+    # Step 3: Now, build the payload (this is now a real JS Array)
     payload = JSON.stringify({"ids": ids_js})
-    print("payload:", payload[:200])
+    print("payload preview:", payload[:200])  # Should be a long JSON string, not {}
 
     headers = Headers.new()
     headers.append("X-API-Key", api_key)
