@@ -36,6 +36,8 @@ async def get_fight_data(
     headers.append("Content-Type", "application/json")
 
     payload = JSON.stringify({"ids": id_list.to_py()})
+    print(f"id_list: {id_list}")
+    print(f"payload: {payload}")
 
     post_options = Object.fromEntries(
         [
