@@ -31,7 +31,7 @@ async def get_fight_data(
     # 2. POST /fights/bulk for fight data
     update_status(f"Fetched {len(id_list)} IDs, requesting bulk data...")
 
-    headers = Headers()
+    headers = Headers.new()
     headers.append("X-API-Key", api_key)
     headers.append("Content-Type", "application/json")
 
