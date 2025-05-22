@@ -32,25 +32,25 @@ async def get_fight_data(
     update_status(f"Fetched {len(id_list)} IDs, requesting bulk data...")
 
     # Force payload to a JS string and headers to JS object
-    print("Type of id_list:", type(id_list))
-    print("id_list[:5]:", id_list[:5])
-    print("len(id_list):", len(id_list))
     payload = JSON.stringify({"ids": id_list})
-    payload_js = String(payload)
-    print("Payload type:", type(payload_js))
-    print("Payload value:", payload_js)
+    print("Payload type:", type(payload))
+    print("Payload value:", payload)
 
-    headers_js = Object.fromEntries(
+    post_options = Object.fromEntries(
         [
-            ["X-API-Key", api_key],
-            ["Content-Type", "application/json"],
+            ["method", "POST"],
+            [
+                "headers",
+                Object.fromEntries(
+                    [
+                        ["X-API-Key", api_key],
+                        ["Content-Type", "application/json"],
+                    ]
+                ),
+            ],
+            ["body", payload],
         ]
     )
-    post_options = {
-        "method": "POST",
-        "headers": headers_js,
-        "body": payload_js,
-    }
     resp2 = await fetch(f"{API_BASE}/fights/bulk", post_options)
     bulk = await resp2.json()
 
