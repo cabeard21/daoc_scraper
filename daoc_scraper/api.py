@@ -47,7 +47,7 @@ if not DEBUG:
         allow_origins=["https://www.daocapi.com"],  # your client
         allow_credentials=True,
         allow_methods=["GET", "POST"],
-        allow_headers=["Authorization", "Content-Type"],
+        allow_headers=["Authorization", "Content-Type", "X-API-Key"],
     )
 
 api_key_header = APIKeyHeader(name="X-API-Key", auto_error=False)
