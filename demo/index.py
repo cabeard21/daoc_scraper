@@ -2,8 +2,8 @@ import asyncio
 
 import numpy as np
 import pandas as pd
-from js import Headers, document, fetch
-from pyodide.ffi import create_proxy
+from js import JSON, Object, Plotly, document, fetch
+from pyodide.ffi import create_proxy, to_js
 
 API_BASE = "https://www.daocapi.com"
 
@@ -17,16 +17,10 @@ async def get_fight_data(
 ) -> pd.DataFrame:
     update_status("Fetching IDs...")
     # 1. Get IDs
-    import js
+    headers = Object.fromEntries([["X-API-Key", api_key]])
 
     params = f"?min_size={min_size}&max_size={max_size}&limit=500"
-    print("API key to be sent:", api_key)
-    response = await js.fetch(
-        f"{API_BASE}/fights/{params}",
-        js.Object.fromEntries(
-            [["headers", js.Object.fromEntries([["X-API-Key", api_key]])]]
-        ),
-    )
+    response = await fetch(f"{API_BASE}/fights/{params}", {"headers": headers})
     id_list = await response.json()
 
     if not id_list:
@@ -35,9 +29,7 @@ async def get_fight_data(
     # 2. POST /fights/bulk for fight data
     update_status(f"Fetched {len(id_list)} IDs, requesting bulk data...")
     # JS fetch requires body to be JSON string
-    import js
-
-    payload = js.JSON.stringify({"ids": id_list})
+    payload = JSON.stringify({"ids": id_list})
     resp2 = await fetch(
         f"{API_BASE}/fights/bulk",
         {
@@ -66,9 +58,6 @@ async def get_fight_data(
 
 
 def analyze_data(df: pd.DataFrame) -> None:
-    from js import Plotly
-    from pyodide.ffi import to_js
-
     class_counts = df["Class"].value_counts()
     plot_data = [
         dict(
