@@ -58,6 +58,7 @@ async def get_fight_data(
 
     resp2 = await fetch(f"{API_BASE}/fights/bulk", post_options)
     bulk = await resp2.json()
+    bulk = bulk.to_py()
 
     # 3. Flatten data to rows
     rows = []
