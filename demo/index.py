@@ -2,7 +2,7 @@ import asyncio
 
 import numpy as np
 import pandas as pd
-from js import JSON, Object, Plotly, String, document, fetch
+from js import JSON, Headers, Object, Plotly, document, fetch
 from pyodide.ffi import create_proxy, to_js
 
 API_BASE = "https://www.daocapi.com"
@@ -31,19 +31,15 @@ async def get_fight_data(
     # 2. POST /fights/bulk for fight data
     update_status(f"Fetched {len(id_list)} IDs, requesting bulk data...")
 
-    payload = JSON.stringify({"ids": id_list})
-    print("Payload type:", type(payload))
-    print("Payload value:", payload)
+    post_headers = Headers.new()
+    post_headers.append("X-API-Key", api_key)
+    post_headers.append("Content-Type", "application/json")
 
-    headers = Object.fromEntries(
-        [
-            ["X-API-Key", api_key],
-            ["Content-Type", "application/json"],
-        ]
-    )
+    payload = JSON.stringify({"ids": id_list})
+
     post_options = {
         "method": "POST",
-        "headers": headers,
+        "headers": post_headers,
         "body": payload,
     }
     resp2 = await fetch(f"{API_BASE}/fights/bulk", post_options)
