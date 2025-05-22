@@ -40,8 +40,9 @@ async def get_fight_data(
     print("JS array?", ids_js, type(ids_js))
 
     # Step 3: Now, build the payload (this is now a real JS Array)
-    payload = JSON.stringify({"ids": ids_js})
-    print("payload preview:", payload[:200])  # Should be a long JSON string, not {}
+    js_obj = Object.fromEntries([["ids", ids_js]])
+    payload = JSON.stringify(js_obj)
+    print("payload preview:", payload[:200])
 
     headers = Headers.new()
     headers.append("X-API-Key", api_key)
