@@ -32,6 +32,8 @@ async def get_fight_data(
     update_status(f"Fetched {len(id_list)} IDs, requesting bulk data...")
 
     # Force payload to a JS string and headers to JS object
+    print("id_list:", id_list)
+    print("len(id_list):", len(id_list))
     payload = JSON.stringify({"ids": id_list})
     payload_js = String(payload)
     print("Payload type:", type(payload_js))
