@@ -37,11 +37,10 @@ async def get_fight_data(
 
     payload = JSON.stringify({"ids": id_list})
 
-    post_options = {
-        "method": "POST",
-        "headers": post_headers,
-        "body": payload,
-    }
+    post_options = Object.fromEntries(
+        [["method", "POST"], ["headers", post_headers], ["body", payload]]
+    )
+
     resp2 = await fetch(f"{API_BASE}/fights/bulk", post_options)
     bulk = await resp2.json()
 
