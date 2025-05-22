@@ -31,17 +31,19 @@ async def get_fight_data(
     # 2. POST /fights/bulk for fight data
     update_status(f"Fetched {len(id_list)} IDs, requesting bulk data...")
 
-    post_headers = Headers.new()
-    post_headers.append("X-API-Key", api_key)
-    post_headers.append("Content-Type", "application/json")
+    headers = Headers()
+    headers.append("X-API-Key", api_key)
+    headers.append("Content-Type", "application/json")
 
     payload = JSON.stringify({"ids": id_list})
 
-    post_options = {
-        "method": "POST",
-        "headers": post_headers,
-        "body": payload,
-    }
+    post_options = Object.fromEntries(
+        [
+            ["method", "POST"],
+            ["headers", headers],
+            ["body", payload],
+        ]
+    )
 
     resp2 = await fetch(f"{API_BASE}/fights/bulk", post_options)
     bulk = await resp2.json()
