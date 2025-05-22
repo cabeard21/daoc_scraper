@@ -30,26 +30,27 @@ async def get_fight_data(
         return pd.DataFrame()
     # 2. POST /fights/bulk for fight data
     update_status(f"Fetched {len(id_list)} IDs, requesting bulk data...")
-    # JS fetch requires body to be JSON string
+
+    # Force payload to a JS string and headers to JS object
     payload = JSON.stringify({"ids": id_list})
     payload_js = String(payload)
-    post_options = Object.fromEntries(
+    print("Payload type:", type(payload_js))
+    print("Payload value:", payload_js)
+
+    headers_js = Object.fromEntries(
         [
-            ["method", "POST"],
-            [
-                "headers",
-                Object.fromEntries(
-                    [
-                        ["X-API-Key", api_key],
-                        ["Content-Type", "application/json"],
-                    ]
-                ),
-            ],
-            ["body", payload_js],
+            ["X-API-Key", api_key],
+            ["Content-Type", "application/json"],
         ]
     )
+    post_options = {
+        "method": "POST",
+        "headers": headers_js,
+        "body": payload_js,
+    }
     resp2 = await fetch(f"{API_BASE}/fights/bulk", post_options)
     bulk = await resp2.json()
+
     # 3. Flatten data to rows
     rows = []
     for fight_id, payload in bulk.items():
@@ -60,7 +61,6 @@ async def get_fight_data(
                     "Class": p["class_name"],
                     "Win": p["win"],
                     "Name": p.get("name", "Unknown"),
-                    # If needed: "Date": payload["fight"]["date"]
                 }
             )
     df = pd.DataFrame(rows)
