@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Pyodide Data Analysis Demo</title>
+    <!-- Pyscript -->
+    <link
+      rel="stylesheet"
+      href="https://pyscript.net/releases/2025.5.1/core.css"
+    />
+    <script
+      type="module"
+      src="https://pyscript.net/releases/2025.5.1/core.js"
+    ></script>
+    <!-- Plotly for JS charting -->
+    <script src="https://cdn.plot.ly/plotly-3.0.1.min.js"></script>
+    <style>
+      #plot,
+      #plot2 {
+        width: 100%;
+        height: 500px;
+      }
+    </style>
+  </head>
+
+  <body>
+    <h1>Fight Data from API</h1>
+    <label for="api-key-input">Enter API Key:</label>
+    <input
+      type="text"
+      id="api-key-input"
+      placeholder="Paste your API Key here"
+    />
+    <button id="fetch-btn">Fetch Data from API</button>
+    <div id="status"></div>
+    <div id="plot"></div>
+    <div id="plot2"></div>
+    <py-config> packages = ["pandas", "numpy"] </py-config>
+    <py-script src="index.py"></py-script>
+  </body>
+</html>

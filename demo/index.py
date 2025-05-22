@@ -1,0 +1,123 @@
+import asyncio
+
+import numpy as np
+import pandas as pd
+from js import Headers, document, fetch
+from pyodide.ffi import create_proxy
+
+API_BASE = "https://www.daocapi.com"
+
+
+def update_status(msg: str) -> None:
+    document.getElementById("status").innerText = msg
+
+
+async def get_fight_data(
+    api_key: str, min_size: int = 8, max_size: int = 8
+) -> pd.DataFrame:
+    update_status("Fetching IDs...")
+    # 1. Get IDs
+    params = f"?min_size={min_size}&max_size={max_size}&limit=500"
+    headers = Headers.new()
+    headers.append("X-API-Key", api_key)
+    resp = await fetch(f"{API_BASE}/fights/{params}", {"headers": headers})
+    id_list = await resp.json()
+    if not id_list:
+        update_status("No fights found.")
+        return pd.DataFrame()
+    # 2. POST /fights/bulk for fight data
+    update_status(f"Fetched {len(id_list)} IDs, requesting bulk data...")
+    # JS fetch requires body to be JSON string
+    import js
+
+    payload = js.JSON.stringify({"ids": id_list})
+    resp2 = await fetch(
+        f"{API_BASE}/fights/bulk",
+        {
+            "method": "POST",
+            "headers": headers,
+            "body": payload,
+        },
+    )
+    bulk = await resp2.json()
+    # 3. Flatten data to rows
+    rows = []
+    for fight_id, payload in bulk.items():
+        for p in payload["participants"]:
+            rows.append(
+                {
+                    "ID": fight_id,
+                    "Class": p["class_name"],
+                    "Win": p["win"],
+                    "Name": p.get("name", "Unknown"),
+                    # If needed: "Date": payload["fight"]["date"]
+                }
+            )
+    df = pd.DataFrame(rows)
+    update_status(f"Loaded {len(df)} rows from API.")
+    return df
+
+
+def analyze_data(df: pd.DataFrame) -> None:
+    from js import Plotly
+    from pyodide.ffi import to_js
+
+    class_counts = df["Class"].value_counts()
+    plot_data = [
+        dict(
+            type="bar",
+            x=class_counts.index.tolist(),
+            y=class_counts.values.tolist(),
+            marker=dict(color="blue"),
+        )
+    ]
+    Plotly.newPlot("plot", to_js(plot_data), to_js({"title": "Class Distribution"}))
+    win_rates = df.groupby("Class")["Win"].mean().reset_index()
+    n = df.groupby("Class")["Win"].count().reset_index(name="n")["n"]
+    p = win_rates["Win"]
+    z = 1.96
+    z2 = z**2
+    ci_lower = (p + z2 / (2 * n) - z * np.sqrt(p * (1 - p) / n + z2 / (4 * n**2))) / (
+        1 + z2 / n
+    )
+    win_rates["Wilson_Lower"] = ci_lower
+    plot_data2 = [
+        dict(
+            type="bar",
+            x=win_rates["Class"].tolist(),
+            y=win_rates["Win"].tolist(),
+            error_y=dict(
+                type="data",
+                array=(win_rates["Win"] - win_rates["Wilson_Lower"]).tolist(),
+                visible=True,
+            ),
+            marker=dict(color="green"),
+        )
+    ]
+    Plotly.newPlot("plot2", to_js(plot_data2), to_js({"title": "Win Rate per Class"}))
+
+
+def on_fetch_click(event=None) -> None:
+    # Use asyncio.create_task to run coroutine
+    asyncio.create_task(fetch_and_analyze())
+
+
+async def fetch_and_analyze() -> None:
+    api_key = document.getElementById("api-key-input").value
+    if not api_key:
+        update_status("Please enter your API key.")
+        return
+    update_status("Starting data fetch...")
+    try:
+        df = await get_fight_data(api_key)
+        if len(df):
+            analyze_data(df)
+        else:
+            update_status("No data to analyze.")
+    except Exception as e:
+        update_status(f"Error: {e}")
+
+
+# Setup button
+button = document.getElementById("fetch-btn")
+button.addEventListener("click", create_proxy(on_fetch_click))
