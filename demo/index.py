@@ -18,9 +18,10 @@ async def get_fight_data(
     update_status("Fetching IDs...")
     # 1. Get IDs
     params = f"?min_size={min_size}&max_size={max_size}&limit=500"
-    headers = Headers.new()
-    headers.append("X-API-Key", api_key)
-    resp = await fetch(f"{API_BASE}/fights/{params}", {"headers": headers})
+    print("API key to be sent:", api_key)
+    resp = await fetch(
+        f"{API_BASE}/fights/{params}", {"headers": {"X-API-Key": api_key}}
+    )
     id_list = await resp.json()
     if not id_list:
         update_status("No fights found.")
