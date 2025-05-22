@@ -35,7 +35,7 @@ async def get_fight_data(
     headers.append("X-API-Key", api_key)
     headers.append("Content-Type", "application/json")
 
-    payload = JSON.stringify({"ids": id_list})
+    payload = JSON.stringify({"ids": id_list.to_py()})
 
     post_options = Object.fromEntries(
         [
