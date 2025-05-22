@@ -35,12 +35,15 @@ async def get_fight_data(
     print("Payload type:", type(payload))
     print("Payload value:", payload)
 
+    headers = Object.fromEntries(
+        [
+            ["X-API-Key", api_key],
+            ["Content-Type", "application/json"],
+        ]
+    )
     post_options = {
         "method": "POST",
-        "headers": {
-            "X-API-Key": api_key,
-            "Content-Type": "application/json",
-        },
+        "headers": headers,
         "body": payload,
     }
     resp2 = await fetch(f"{API_BASE}/fights/bulk", post_options)
