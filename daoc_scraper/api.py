@@ -44,7 +44,10 @@ if not DEBUG:
 
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=["https://www.daocapi.com"],  # your client
+        allow_origins=[
+            "https://www.daocapi.com",
+            "http://localhost:5173",
+        ],
         allow_credentials=True,
         allow_methods=["GET", "POST"],
         allow_headers=["Authorization", "Content-Type", "X-API-Key"],
