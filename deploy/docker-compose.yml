@@ -35,6 +35,7 @@ services:
       - api
     networks:
       - api_net
+      - selenium_net
   scheduler:
     build:
       context: ..                
@@ -55,12 +56,6 @@ services:
       - SELENIUM_URL=http://selenium-hub:4444
     networks:
       - selenium_net
-  demo:
-    image: nginx:stable-alpine
-    volumes:
-      - ../demo:/usr/share/nginx/html:ro
-    networks:
-      - api_net
 
 networks:
   selenium_net:
