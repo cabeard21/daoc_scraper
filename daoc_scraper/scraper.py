@@ -289,6 +289,12 @@ async def fetch_details(
                 async with session.get(url, headers=headers) as response:
                     response.raise_for_status()
                     response_json = await response.json()
+                    if not response_json:
+                        print(f"Empty response for {id}")
+                        return {
+                            "id": id,
+                            "error": "Empty response",
+                        }
                     # Add id to the response
                     response_json["id"] = id
                     return response_json
@@ -407,7 +413,11 @@ def fetch_fight_data(
 
     # Extract the fight details
     fight_data = pd.concat(  # type: ignore
-        [extract_fight_details(fight_json, id_to_class_name) for fight_json in data]
+        [
+            extract_fight_details(fight_json, id_to_class_name)
+            for fight_json in data
+            if fight_json and isinstance(fight_json, dict)
+        ]
     )
     fight_data.reset_index(drop=True, inplace=True)
 
