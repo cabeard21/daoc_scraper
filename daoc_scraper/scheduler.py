@@ -14,6 +14,7 @@ from apscheduler.schedulers.blocking import BlockingScheduler
 # Use the same Python that launched this script
 PYTHON = sys.executable
 CLI_MODULE = "daoc_scraper.cli"
+EXPORT_MODULE = "daoc_scraper.export_static"
 
 
 def scrape_all_sizes() -> None:
@@ -30,6 +31,8 @@ def scrape_all_sizes() -> None:
         ],
         check=True,
     )
+    # Run static dump
+    subprocess.run([PYTHON, "-m", EXPORT_MODULE], check=True)
 
 
 if __name__ == "__main__":
