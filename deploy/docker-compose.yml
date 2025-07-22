@@ -62,4 +62,4 @@ networks:
   selenium_net:
     external: true
   api_net:
-    external: false
+    external: true
